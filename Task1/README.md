@@ -11,6 +11,11 @@ Yêu cầu: -  Chạy được
 Suggested IDE: https://www.masm32.com/
 ```
 
+### Code
+
+[pebRC4.asm](https://github.com/noobmannn/KCSCTrainingReverse/blob/main/Task1/Code/pebRC4.asm)
+[pebRC4.exe](https://github.com/noobmannn/KCSCTrainingReverse/blob/main/Task1/Code/pebRC4.exe)
+
 ### Demo
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/855d60f25f38192aa230ac730f10ef1e6ef0de22/Task1/Img/Demo%20pebRC4.png)
