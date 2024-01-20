@@ -390,7 +390,7 @@ assume fs:nothing
         push [ebp - 04h]
         call peb_getFunc				; lấy địa chỉ hàm, kết quả tại eax
 
-        push [ebp + 8h]
+        push [ebp + 8h]					; -10 (STD_INPUT_HANDLE) với ReadConsoleA hoặc -11 (STD_OUTPUT_HANDLE) với WriteConsoleA
         call eax						; gọi hàm
 
         add esp, 08h
@@ -423,11 +423,11 @@ assume fs:nothing
         push [ebp - 04h]
         call peb_getFunc				; lấy địa chỉ hàm, kết quả tại eax
         
-		push 0
-		push offset realIn
-		push 300
-		push [ebp + 08h]
-		push [ebp - 08h]						
+		push 0							; pInputControl
+		push offset realIn				; lpNumberOfCharsRead
+		push 300						; nNumberOfCharsToRead
+		push [ebp + 08h]				; *lpBuffer
+		push [ebp - 08h]				; HandleRead						
 		call eax						; gọi hàm
 
         add esp, 0ch
@@ -460,11 +460,11 @@ assume fs:nothing
         push [ebp - 04h]
         call peb_getFunc				; lấy địa chỉ hàm, kết quả tại eax
         
-		push 0
-		push offset realOut
-		push [ebp + 08h]
-		push [ebp + 0ch]
-		push [ebp - 08h]						
+		push 0							; lpReserved
+		push offset realOut				; lpNumberOfCharsWritten
+		push [ebp + 08h]				; nNumberOfCharsToWrite
+		push [ebp + 0ch]				; *lpBuffer
+		push [ebp - 08h]				; HandleWrite						
 		call eax						; gọi hàm
 
         add esp, 0ch
