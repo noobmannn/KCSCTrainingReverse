@@ -112,7 +112,7 @@ Quay trở lại chương trình, vào hàm ```runvm```, tiếp tục Convert to
 
 Tuy nhiên nếu chỉ có vậy thì vòng lặp trên sẽ chạy mãi không dừng được, vì vậy phải có một nơi nào đó thay đổi giá trị step để nó kết thúc vòng lặp While(1) ở ngoài cùng.
 
-Các hàm trong VM hầu hết các hàm đều khai báo hai giá trị chính: v4 là offset ```this->step + 1``` của ```this->vmcode```, còn v5 offset là ```this->step + 2``` của ```this->vmcode```. Ví dụ như với hàm ```movi```, giá trị v4 sẽ luôn bằng 2, khi đó offset 2 của ```this``` chính là ```loadOperand```, hàm này sẽ đẩy v5 vào ```this->loadOperand```; hay là với hàm ```lodi```, v4 sẽ luôn bằng 0, offset 0 của ```this``` là ```loadInput```, hàm này đẩy 1 word (2 kí tự) offset v5 của ```this->userinput``` vào ```this->loadInput```. Với hầu hết các hàm khác cũng vậy, cách thể hiện có thể khác nhưng đều là xoay quanh làm việc với các giá trị ```this->loadInput``` và ```this->loadOperand```
+Các hàm trong VM hầu hết đều khai báo hai giá trị chính: v4 là offset ```this->step + 1``` của ```this->vmcode```, còn v5 là offset ```this->step + 2``` của ```this->vmcode```. Ví dụ như với hàm ```movi```, giá trị v4 sẽ luôn bằng 2, khi đó offset 2 của ```this``` chính là ```loadOperand```, hàm này sẽ đẩy v5 vào ```this->loadOperand```; hay là với hàm ```lodi```, v4 sẽ luôn bằng 0, offset 0 của ```this``` là ```loadInput```, hàm này đẩy 1 word (2 kí tự) offset v5 của ```this->userinput``` vào ```this->loadInput```. Với hầu hết các hàm khác cũng vậy, cách thể hiện có thể khác nhưng đều là xoay quanh làm việc với các giá trị ```this->loadInput``` và ```this->loadOperand```
 
 Tuy nhiên sẽ có 1 vài sự khác biệt ở hai hàm ```jpni``` và ```cmpw```
 
