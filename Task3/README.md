@@ -17,7 +17,7 @@ Load vào ida32 và bắt đầu từ hàm main
 
 Nhìn qua hàm main ta thấy có hàm [SetUnhandledExeptionFilter](https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-setunhandledexceptionfilter). Hàm này thường được dùng để xử lý ngoại lệ. Trong main hàm này có tham số truyền vào là địa chỉ của hàm ```TopLevelExceptionFilter```. Điều đó có nghĩa là nếu như có lỗi xảy ra, chương trình sẽ chạy vào hàm  ```TopLevelExceptionFilter```. 
 
-Nhìn vào đoạn code asm ở dưới có thể dễ dàng thấy giá trị của biến ```[ebp+var_4]``` chắc chắn bằng 0, việc thực hiện lệnh idiv ở đây chắc chắn sẽ gây ra lỗi. Có thể thấy đây chính là ý đồ của tác giả để điều hướng luồn chương trình vào hàm ```TopLevelExceptionFilter```.
+Nhìn vào đoạn code asm ở dưới có thể dễ dàng thấy giá trị của biến ```[ebp+var_4]``` chắc chắn bằng 0, việc thực hiện lệnh idiv ở đây chắc chắn sẽ gây ra lỗi. Có thể thấy đây chính là ý đồ của tác giả để điều hướng luồng chương trình vào hàm ```TopLevelExceptionFilter```.
 
 Hàm ```SetUnhandledExeptionFilter``` có đặc điểm là nếu có lỗi nào thì chương trình sẽ gọi một trình gỡ lỗi để xử lý, nhưng nếu đang chạy trong debug, thì trình gỡ lỗi sẽ không được gọi. Khi mình thử debug đến đoạn này, chương trình chỉ raise ra thông báo lỗi, kể cả có cố gắng bỏ qua lỗi đó cũng không được. Đây là cách mà tác giả sử dụng hàm ```SetUnhandledExeptionFilter``` để anti-debug. Lúc này để có thể chạy vào hàm ```TopLevelExceptionFilter``` như đúng luồng của chương trình, ta chỉ còn cách là sửa lại giá trị thanh ghi EIP (Extended Instruction Pointer) trở thành địa chỉ của hàm  ```TopLevelExceptionFilter```.
 
@@ -35,7 +35,7 @@ Có vẻ chương trình đã nhét thêm byte vào để ida không detect đư
 
 Bây giờ đọc kĩ hàm ```TopLevelExceptionFilter```, đầu tiên lệnh ```mov     eax, large fs:30h``` sẽ lấy địa chỉ của PEB trong [TIB](https://en.wikipedia.org/wiki/Win32_Thread_Information_Block) (Thread Information Block). Có thể thấy chương trình đang sử dụng ```BeingDebugged``` trong cấu trúc [PEB](https://processhacker.sourceforge.io/doc/ntpebteb_8h_source.html). Nếu chương trình không bị debug, giá trị của trường này là 0. Khi đó giá trị của biến ```byte_D74082``` là ```0xAB```. Mình đổi tên biến này thành ```isAB```
 
-byte_D74083 // chưa viết xong
+Còn giá trị của ```byte_D74083``` phụ thuộc vào biến ```v4```. Đọc qua code có vẻ giống như chương trình đang check [NtGlobalFlag](https://anti-debug.checkpoint.com/techniques/debug-flags.html#manual-checks-ntglobalflag) (```and     eax, 70h```), tuy nhiên nếu đúng là check NtGlobalFlag thì đoạn trên phải add thanh ghi ecx với 0x68. Vì thế đoạn này đơn giản chỉ là tính toán bình thường và sau khi kết thúc đoạn trên thì ```v4``` bằng 0. Khi đó giá trị biến ```byte_D74083``` là ```0xCD```. Mình đổi tên biến này thành ```isCD```
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/ab56d6302a2359c63bf89911fa25dad59fa7a900/Task3/Img/6.png)
 
