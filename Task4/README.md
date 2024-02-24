@@ -61,7 +61,7 @@ Như đoạn code ở trên đây, sau khi đẩy hai giá trị hash vào r8 v�
 
 Kết thúc hàm ```init```, chương trình gọi hàm ```GetStdHandle``` vừa được lấy API ở trên kia để tạo các HandleRead và HandleWrite dùng cho đoạn sau.
 
-Vào Hàm ```main```, đầu tiên chương trình tính ra String ```Enter flag:```, sau đó chương trình sử dụng HandleWrite được tính trên kia và gọi hàm WriteFile để in chuỗi ```Enter flag:``` ra màn hình, sau đó dùng HandleRead và gọi hàm ReadFile để yêu cầu người dùng nhập vào 1 chuỗi từ bàn phím. Sau đó chương trình gọi đến hàm ```encFlag```. Tại hàm ```encFlag``` chương trình tiếp tục gọi hàm ```initEncrypt```
+Vào Hàm ```main```, đầu tiên chương trình tính ra String ```Enter flag:```, sau đó chương trình sử dụng HandleWrite được tính trên kia và gọi hàm WriteFile để in chuỗi ```Enter flag:``` ra màn hình, sau đó dùng HandleRead và gọi hàm ReadFile để yêu cầu người dùng nhập vào 1 chuỗi từ bàn phím. Sau đó chương trình gọi đến hàm ```encFlag```
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/ec4e72ad005d50c0ae682829a5edb0df7c437bc0/Task4/Img/12.png)
 
