@@ -251,7 +251,7 @@ void encFlag()
         CryptReleaseContext(hProv, 0);
         return;
     }
-    BYTE buf[] = "Kanavi";
+    BYTE buf[] = "siuuuuuuuuuuu";   //input
     BYTE len = strlen(buf);
     DWORD dwCount = len;
     if (!CryptEncrypt(hKey, 0, 1, 0, buf, &dwCount, 0x400))
