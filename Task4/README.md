@@ -63,11 +63,95 @@ Quay lại hàm ```init```, sau khi load các dll, chương trình gọi ```reso
 
 Mục đích của hàm [RtlAddVectoredExceptionHandler](https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-addvectoredexceptionhandler) là để tạo một VEH (Vectored Exception Handler) mới nhằm mục đích để xử lý ngoại lệ. Hiểu đơn giản là kể từ sau khi gọi hàm trên, nếu chương trình gặp Exception, chương trình sẽ xử lý Exception trên bằng cách gọi hàm ```VEHHandler```.
 
-![](https://github.com/noobmannn/KCSCTrainingReverse/blob/f05b11095d55bf57e4e4568536844049b3cd0c8a/Task4/Img/11.png)
+Dưới đây là một đoạn code C đơn giản mô phỏng lại cách VEH hoạt động
 
-Như đoạn code ở trên đây, sau khi đẩy hai giá trị hash vào r8 và r9, chương trình clear thanh ghi rax sau đó thực hiện div rax, điều này sẽ tạo ra Exception do lỗi chia cho 0, chương trình sẽ xử lý Exception trên bằng cách gọi hàm ```sub_7FF6CA4F11A0```. Hàm này chỉ đơn giản là lấy hai giá trị của r8 và r9 trên kia làm tham số cho hàm ```resolveapi``` để lấy địa chỉ API. Như ở ví dụ trên hình là địa chỉ của ```GetStdHandle```. Từ sau đây trở đi, cấu trúc dạng này sẽ được lặp đi lặp lại nhiều lần nhằm mục đích để lấy địa chỉ API cần thiết ra sử dụng.
+```C
+#include <windows.h>
+#include <stdio.h>
+
+LONG NTAPI MyVEHHandler(PEXCEPTION_POINTERS ExceptionInfo)
+{
+    printf("MyVEHHandler (0x%x)\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+    if (ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_INT_DIVIDE_BY_ZERO)
+    {
+        printf("Divide by zero at 0x%p\n", ExceptionInfo->ExceptionRecord->ExceptionAddress);
+        ExceptionInfo->ContextRecord->Rip += 2;
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+int main()
+{
+    AddVectoredExceptionHandler(1, MyVEHHandler);
+    int except1 = 3;
+    except1 /= 0;
+    printf("1st Except\n");
+    int except2 = 6;
+    except2 /= 0;
+    printf("2nd Except\n");
+    int except3 = 9;
+    except3 /= 0;
+    printf("3rd Except\n");
+    return 0;
+}
+```
+
+Đây là kết quả khi chạy đoạn code mô phỏng trên, có thể thấy mỗi khi gặp except, chương trình sẽ nhảy vào hàm ```MyVEHHandler```
+
+```
+MyVEHHandler (0xc0000094)
+Divide by zero at 0x0000000000401603
+1st Except
+MyVEHHandler (0xc0000094)
+Divide by zero at 0x0000000000401624
+2nd Except
+MyVEHHandler (0xc0000094)
+Divide by zero at 0x0000000000401645
+3rd Except
+```
+
+Quay trở lại bài, phân tích lại hàm ```VEHHandler```, có thể thấy hàm này có vai trò giống như hàm ```MyVEHHandler``` trong ví dụ ở trên
+
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/ee551939a962de87e7139afd0c76fcb7961235ab/Task4/Img/18.png)
+
+Sử dụng Convert to Struct * để đổi kiểu dữ liệu của a1 (tham số của hàm) thành ```_EXCEPTION_POINTERS```, có cấu trúc cụ thể như dưới đây
+
+```
+typedef struct _EXCEPTION_POINTERS {
+  PEXCEPTION_RECORD ExceptionRecord;
+  PCONTEXT          ContextRecord;
+} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
+```
+
+Đây là cấu trúc dùng để chứa thông tin về ngoại lệ và trạng thái của chương trình khi đang xảy ra ngoại lệ, với ```ExceptionRecord``` chứa thông tin về ngoại lệ đang xảy ra, còn ```ContextRecord``` chứa trạng thái của chương trình khi đang xảy ra ngoại lệ, trong đó có cả giá trị của các thanh ghi tại thời điểm cảy ra ngoại lệ. Có thể tham khảo kĩ hơn ở [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_pointers), [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-context) và [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record)
+
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/ee551939a962de87e7139afd0c76fcb7961235ab/Task4/Img/19.png)
+
+Sau khi chuyển đổi struct xong, có thể dễ dàng hiểu được những gì chương trình sẽ thực hiện khi xảy ra ngoại lệ:
+- Gọi hàm ```resolveapi``` với hai tham số truyền vào lần lượt là giá trị của hai thanh ghi ```r8``` và ```r9```, kết quả trả về là địa chỉ của API sẽ được lưu vào thanh ghi ```rax```
+- Tăng giá trị của thanh ghi RIP thêm 4, tức là câu lệnh tiếp theo sau lệnh ```div rax``` sẽ được thực hiện sau khi hàm kết thúc
+
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/2e4c91111b58045873a2317b66dce47167991f1d/Task4/Img/20.png)
+
+Ví dụ như đoạn code ở trên đây, sau khi đẩy hai giá trị hash vào r8 và r9, chương trình clear thanh ghi rax sau đó thực hiện div rax, điều này sẽ tạo ra Exception do lỗi chia cho 0, chương trình sẽ xử lý Exception trên bằng cách gọi hàm ```VEHHandler```. Hàm này sẽ lấy hai giá trị của r8 và r9 trên kia làm tham số cho hàm ```resolveapi``` để lấy địa chỉ API. Như ở ví dụ trên hình là địa chỉ của ```GetStdHandle```. Sau đó hàm tăng RIP thêm 4, tức là câu lệnh tiếp theo được thực hiện sẽ là ```mov     rsi, rax```. 
+
+Từ sau đây trở đi, cấu trúc dạng này sẽ được lặp đi lặp lại nhiều lần nhằm mục đích để lấy địa chỉ API cần thiết ra sử dụng. Tuy nhiên khi chúng ta debug, chương trình sẽ raise thông báo lỗi và dừng lại ở đó, và sau đó khi chúng ta bypass, chương trình sẽ không dừng lại ở RIP tiếp theo mà sẽ load một mạch cho đến khi gặp breakpoint, gặp exception hoặc kết thúc chương trình.
+
+Vì vậy để hỗ trợ việc Debug các đoạn code với cấu trúc như trên, mình sẽ sử dụng idapython để mô phỏng lại hai chức năng của hàm ```VEHHandler```
+
+```python
+set_reg_value(Appcall.resolveapi(get_reg_value('r8') ,get_reg_value('r9')).value, 'rax')
+set_reg_value(get_reg_value('rip') + 4, 'rip')
+```
+
+Từ đây mỗi khi trace đến lệnh ```div rax```, vào File->Script Command và Run đoạn script trên, ta lấy được địa chỉ api cần tìm tại rax, và RIP cũng được chỉnh đến lệnh tiếp theo để chúng ta tiếp tục trace
+
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/ac6a97da1fa8f35a810a254b4aa890019c067186/Task4/Img/21.png)
 
 Kết thúc hàm ```init```, chương trình gọi hàm ```GetStdHandle``` vừa được lấy API ở trên kia để tạo các HandleRead và HandleWrite dùng cho đoạn sau.
+
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/f4f517b83aef956bb5aa7e727a1c7559188648c4/Task4/Img/22.png)
 
 ### Encrypt Flag
 
