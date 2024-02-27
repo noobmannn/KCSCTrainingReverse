@@ -27,6 +27,8 @@ Vào hàm ```AllNameDlls```, đầu tiên chương trình gọi tới hàm ```re
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/091ff413355fc90823fdaa99f501eb57e1638bf4/Task4/Img/5.png)
 
+### Resolve API in PEB by Hash
+
 Xem thử hàm ```resolveapi```, có vẻ đây là nơi Resolve các API để chương trình sử dụng
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/008f122d86f43d67c0b053d1f7d33237b4e3f03b/Task4/Img/6.png)
@@ -39,27 +41,35 @@ Hàm này lấy địa chỉ của ```InMemoryOrderModuleList``` bằng cách s�
 - Tìm địa chỉ DLL: Hash tất cả tên của tất cả các DLL có trong InMemoryOrderModuleList bằng thuật toán hash [FNV1A32](https://gist.github.com/ruby0x1/81308642d0325fd386237cfa3b44785c), sau đó so sánh với giá trị tham số thứ hai
 - Tìm địa chỉ API: Sau khi tìm được địa chỉ DLL, tiến hành Hash tất cả tên của tất cả các API có trong DLL vừa tìm được ở trên, sau đó so sánh với giá trị tham số thứ nhất
 
+Có thể tham khảo các giá trị hash của các API trong Kernel32.dll và ntdll.dll ở [đây](https://gist.github.com/Sinclairq/8d746cdbff92cdb21a057742cee36e5e#file-export_list-md)
+
 Dưới đây là đoạn code FNV1A32 dùng để hash tên các DLL, việc hash tên các DLL cũng dùng cấu trúc tương tự
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/d16cb94c6e598ad73d638fe576f299c07e783e81/Task4/Img/7.png)
 
 Kết quả trả về của hàm là địa chỉ của API cần tìm, được lưu ở RAX
 
+### Load Library
+
 Quay trở lại hàm ```AllNameDlls```, sau khi thực hiện ```resolveapi```, kết quả rax là địa chỉ của hàm ```LoadLibraryW```, sau đó hàm này chỉ tính các String là tên các dll và sau đó đẩy nó làm tham số để gọi ```LoadLibraryW```. Mục đích của việc này là load các thư viện trên vào chương trình để sử dụng cho các API sau này. Các dll được load vào là: ```NTDLL.dll```, ```USER32.dll```, ```CRYPT32.dll```, ```Advapi32.dll```. Dưới đây là đoạn tính ra String ```USER32.dll``` và dùng String đó làm tham số để gọi hàm ```LoadLibraryW``` để load ```USER32.dll```
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/89895078df218b69b6f227596b415f721ffc09cb/Task4/Img/8.png)
 
-Quay lại hàm ```init```, sau khi load các dll, chương trình gọi ```resolveapi``` để lấy địa chỉ của ```RtlAddVectoredExceptionHandler```, sau đó truyền hai tham số gồm địa chỉ của hàm ```sub_7FF6CA4F11A0``` và 1 rồi gọi hàm trên.
+### VEH
 
-![](https://github.com/noobmannn/KCSCTrainingReverse/blob/3c8ccff43f166a9bf537aa8b021080f7d750c737/Task4/Img/9.png)
+Quay lại hàm ```init```, sau khi load các dll, chương trình gọi ```resolveapi``` để lấy địa chỉ của ```RtlAddVectoredExceptionHandler```, sau đó truyền hai tham số gồm địa chỉ của hàm ```VEHHandler``` và 1 rồi gọi hàm trên.
 
-Mục đích của hàm [RtlAddVectoredExceptionHandler](https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-addvectoredexceptionhandler) là để tạo một VEH (Vectored Exception Handler) mới nhằm mục đích để xử lý ngoại lệ. Hiểu đơn giản là kể từ sau khi gọi hàm trên, nếu chương trình gặp Exception, chương trình sẽ xử lý Exception trên bằng cách gọi hàm ```sub_7FF6CA4F11A0```.
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/fb2212d8ca567d1c372c69e26ddc309c6fe5187f/Task4/Img/17.png)
+
+Mục đích của hàm [RtlAddVectoredExceptionHandler](https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-addvectoredexceptionhandler) là để tạo một VEH (Vectored Exception Handler) mới nhằm mục đích để xử lý ngoại lệ. Hiểu đơn giản là kể từ sau khi gọi hàm trên, nếu chương trình gặp Exception, chương trình sẽ xử lý Exception trên bằng cách gọi hàm ```VEHHandler```.
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/f05b11095d55bf57e4e4568536844049b3cd0c8a/Task4/Img/11.png)
 
 Như đoạn code ở trên đây, sau khi đẩy hai giá trị hash vào r8 và r9, chương trình clear thanh ghi rax sau đó thực hiện div rax, điều này sẽ tạo ra Exception do lỗi chia cho 0, chương trình sẽ xử lý Exception trên bằng cách gọi hàm ```sub_7FF6CA4F11A0```. Hàm này chỉ đơn giản là lấy hai giá trị của r8 và r9 trên kia làm tham số cho hàm ```resolveapi``` để lấy địa chỉ API. Như ở ví dụ trên hình là địa chỉ của ```GetStdHandle```. Từ sau đây trở đi, cấu trúc dạng này sẽ được lặp đi lặp lại nhiều lần nhằm mục đích để lấy địa chỉ API cần thiết ra sử dụng.
 
 Kết thúc hàm ```init```, chương trình gọi hàm ```GetStdHandle``` vừa được lấy API ở trên kia để tạo các HandleRead và HandleWrite dùng cho đoạn sau.
+
+### Encrypt Flag
 
 Vào Hàm ```main```, đầu tiên chương trình tính ra String ```Enter flag:```, sau đó chương trình sử dụng HandleWrite được tính trên kia và gọi hàm WriteFile để in chuỗi ```Enter flag:``` ra màn hình, sau đó dùng HandleRead và gọi hàm ReadFile để yêu cầu người dùng nhập vào 1 chuỗi từ bàn phím. Sau đó chương trình gọi đến hàm ```encFlag```
 
@@ -174,7 +184,9 @@ BYTE enc[] = {0xE5, 0x60, 0x44, 0x09, 0x42, 0xC4, 0xBB, 0xDE, 0xF6, 0xA1,
                   0x4F, 0x85};
 ```
 
-Từ đây, mình sẽ viết Script để tính ra Flag bằng cách sử dụng hàm ```CryptDecrypt``` trong thư viện ```Advapi32.dll```.
+### Reverse
+
+Từ những phân tích ở trên, mình sẽ viết Script để tính ra Flag bằng cách sử dụng hàm ```CryptDecrypt``` trong thư viện ```Advapi32.dll```.
 
 ```C
 #include <windows.h>
