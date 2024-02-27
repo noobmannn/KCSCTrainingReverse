@@ -43,7 +43,7 @@ Hàm này lấy địa chỉ của ```InMemoryOrderModuleList``` bằng cách s�
 
 Có thể tham khảo các giá trị hash của các API trong Kernel32.dll và ntdll.dll ở [đây](https://gist.github.com/Sinclairq/8d746cdbff92cdb21a057742cee36e5e#file-export_list-md)
 
-Dưới đây là đoạn code FNV1A32 dùng để hash tên các DLL, việc hash tên các DLL cũng dùng cấu trúc tương tự
+Dưới đây là đoạn code FNV1A32 dùng để hash tên các DLL, việc hash tên các API trong DLL cũng dùng cấu trúc tương tự
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/d16cb94c6e598ad73d638fe576f299c07e783e81/Task4/Img/7.png)
 
