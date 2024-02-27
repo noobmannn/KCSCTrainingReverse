@@ -124,7 +124,7 @@ typedef struct _EXCEPTION_POINTERS {
 } EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 ```
 
-Đây là cấu trúc dùng để chứa thông tin về ngoại lệ và trạng thái của chương trình khi đang xảy ra ngoại lệ, với ```ExceptionRecord``` chứa thông tin về ngoại lệ đang xảy ra, còn ```ContextRecord``` chứa trạng thái của chương trình khi đang xảy ra ngoại lệ, trong đó có cả giá trị của các thanh ghi tại thời điểm cảy ra ngoại lệ. Có thể tham khảo kĩ hơn ở [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_pointers), [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-context) và [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record)
+Đây là cấu trúc dùng để chứa thông tin về ngoại lệ và trạng thái của chương trình khi đang xảy ra ngoại lệ, với ```ExceptionRecord``` chứa thông tin về ngoại lệ đang xảy ra, còn ```ContextRecord``` chứa trạng thái của chương trình khi đang xảy ra ngoại lệ, trong đó có cả giá trị của các thanh ghi tại thời điểm xảy ra ngoại lệ. Có thể tham khảo kĩ hơn ở [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_pointers), [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-context) và [đây](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record)
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/ee551939a962de87e7139afd0c76fcb7961235ab/Task4/Img/19.png)
 
@@ -163,7 +163,9 @@ Tại hàm ```encFlag``` chương trình tiếp tục gọi hàm ```initEncrypt`
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/ec4e72ad005d50c0ae682829a5edb0df7c437bc0/Task4/Img/13.png)
 
-Sau khi đọc kĩ và debug qua, mình thấy hàm này nhằm mục đích để tạo 1 hash SHA-256 tử chuối ```https://www.youtube.com/watch?v=dQw4w9WgXcQ``` (link Rick Roll :))))
+Sau khi đọc kĩ và debug qua, mình thấy hàm này nhằm mục đích để tạo 1 hash SHA-256 từ chuối ```https://www.youtube.com/watch?v=dQw4w9WgXcQ``` (link Rick Roll :))))
+
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/12b6936c727b7a96536034cdcbbc32a7e284cc12/Task4/Img/23.png)
 
 Để thuận tiện cho việc Reverse, mình đã code lại hàm ```initEncrypt``` bằng C nhưng bỏ qua các bước Resolve API bằng VEH và một vài bước nhỏ khác. Các API chính phục vụ cho việc tạo hash được lấy từ ```Advapi32.dll```
 
@@ -201,7 +203,11 @@ void initEncrypt()
 }
 ```
 
-Sau đó chương trình quay trở lại hàm ```encFlag```, ở đây chương trình tạo 1 Key dựa trên chuỗi hash link rick roll trên kia, sau đó dùng Key vừa tạo để mã hoá input mình nhập vào bằng thuật toán ```AES-256```. Các API chính để dùng cho việc tạo khoá và mã hoá cũng được lấy từ ```Advapi32.dll```. Mình cũng code lại hàm trên bằng C nhưng bỏ qua các bước Resolve API bằng VEH và một vài bước nhỏ khác để phục vụ việc Reverse
+Sau đó chương trình quay trở lại hàm ```encFlag```, ở đây chương trình tạo 1 Key dựa trên chuỗi hash link rick roll trên kia, sau đó dùng Key vừa tạo để mã hoá input mình nhập vào bằng thuật toán ```AES-256```. Các API chính để dùng cho việc tạo khoá và mã hoá cũng được lấy từ ```Advapi32.dll```. 
+
+![](https://github.com/noobmannn/KCSCTrainingReverse/blob/12b6936c727b7a96536034cdcbbc32a7e284cc12/Task4/Img/24.png)
+
+Mình cũng code lại hàm trên bằng C nhưng bỏ qua các bước Resolve API bằng VEH và một vài bước nhỏ khác để phục vụ việc Reverse
 
 ```C
 void encFlag()
