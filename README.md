@@ -7,3 +7,5 @@ Task 2: [VM](https://github.com/noobmannn/KCSCTrainingReverse/blob/main/Task2/RE
 Task 3: [Antidebug](https://github.com/noobmannn/KCSCTrainingReverse/blob/main/Task3/README.md)
 
 Task 4: [VEH](https://github.com/noobmannn/KCSCTrainingReverse/blob/main/Task4/README.md)
+
+Task 5: [Opcode](https://github.com/noobmannn/KCSCTrainingReverse/blob/main/Task5/README.md)
