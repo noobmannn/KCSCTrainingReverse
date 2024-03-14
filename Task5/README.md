@@ -63,7 +63,11 @@ Lúc này ta có thể thấy được Opcode ở một trong những tham số 
 
 Sau khi define lại Opcode. Bây giờ mình sẽ tiến hành phân tích nó
 
-Đầu tiên chương trình tiến hành Load Kernel32.dll bằng cách push String "kernel32.dll" lên stack, sau đó gọi hàm ``loadKernel32``
+Đầu tiên chương trình tiến hành Load Kernel32.dll bằng cách push String "kernel32.dll" lên stack
+
+Ở đây người viết opcode đã lợi dụng tính chất của [Calling Invention](https://en.wikipedia.org/wiki/Calling_convention): Khi chương trình chạy đến lệnh Call, địa chỉ tiếp theo sau lệnh Call sẽ tự động được Push lên Stack, mục đích của việc này là để xác định vị trí tiếp theo của chương trình sau khi hàm thực hiện xong. Tuy nhiên như ở ví dụ dưới đây, lệnh tiếp theo sau lệnh call là chuỗi "kernel32.dll" được khai báo. Bằng cách này khi chương trình chạy đến lệnh Call thì địa chỉ của chuỗi trên sẽ được tự động push vào Stack.
+
+Sau khi push xong chuối "kernel32.dll" lên Stack, chương trình gọi hàm ``loadKernel32``
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/c3123cb09e9a08c1919f2912ff8bca94788ee3dc/Task5/Img/8.png)
 
@@ -71,7 +75,7 @@ Sau khi define lại Opcode. Bây giờ mình sẽ tiến hành phân tích nó
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/c3123cb09e9a08c1919f2912ff8bca94788ee3dc/Task5/Img/9.png)
 
-Sau khi Load kernel32.dll, chương trình tiến hành load API LoadLibraryA bằng cách push String "LoadLibraryA" lên stack, sau đó push thêm địa chỉ của Kernel32.dll rồi gọi hàm ``loadAPI`` 
+Sau khi Load kernel32.dll, chương trình tiến hành load API LoadLibraryA bằng cách push String "LoadLibraryA" lên stack, String được push bằng cách lợi dụng tính chất của [Calling Invention](https://en.wikipedia.org/wiki/Calling_convention) như trên kia, sau đó push thêm địa chỉ của Kernel32.dll rồi gọi hàm ``loadAPI`` 
 
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/c3123cb09e9a08c1919f2912ff8bca94788ee3dc/Task5/Img/10.png)
 
@@ -84,10 +88,10 @@ Tiếp theo chương trình load API GetProcAddress bằng cách thức cách t�
 ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/e1b283c01889148098f7eea2e08760b7589a4e3f/Task5/Img/15.png)
 
 Với việc đã lấy được địa chỉ của LoadLibraryA và GetProcAddress, từ đây việc load dll và load API đều thực hiện theo cách như sau:
-- load dll: push String là tên của dll, sau đó gọi hàm LoadLibraryA đã được lưu trước đó trong Stack ra sử dụng. Kết quả trả về là địa chỉ của dll cần tìm, được lưu ở eax. Sau đó chương trình lưu địa chỉ này vào stack để sau này sử dụng. Như trong trường hợp ở ví dụ dưới đây, chương trình đang tìm địa chỉ của ``Advapi32.dll`` rồi sau đó lưu vào Stack.
+- load dll: push String là tên của dll, String được push bằng cách lợi dụng tính chất của [Calling Invention](https://en.wikipedia.org/wiki/Calling_convention) như ví dụ trên kia, sau đó gọi hàm LoadLibraryA đã được lưu trước đó trong Stack ra sử dụng. Kết quả trả về là địa chỉ của dll cần tìm, được lưu ở eax. Sau đó chương trình lưu địa chỉ này vào stack để sau này sử dụng. Như trong trường hợp ở ví dụ dưới đây, chương trình đang tìm địa chỉ của ``Advapi32.dll`` rồi sau đó lưu vào Stack.
   
   ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/c3123cb09e9a08c1919f2912ff8bca94788ee3dc/Task5/Img/12.png)
-- load api: push String là tên của API, sau đó push thêm địa chỉ của dll chứa API đó rồi gọi hàm loadAPI. Kêt quả trả về là địa chỉ của API lưu ở eax, sau đó chương trình lưu địa chỉ này vào stack để sau này sử dụng. Như trong trường hợp ở ví dụ dưới đây, chương trình đang tìm địa chỉ của ``CryptAcquireContextA`` rồi sau đó lưu vào Stack.
+- load api: push String là tên của API, String này cũng được push bằng cách lợi dụng tính chất của [Calling Invention](https://en.wikipedia.org/wiki/Calling_convention), sau đó push thêm địa chỉ của dll chứa API đó rồi gọi hàm loadAPI. Kêt quả trả về là địa chỉ của API lưu ở eax, sau đó chương trình lưu địa chỉ này vào stack để sau này sử dụng. Như trong trường hợp ở ví dụ dưới đây, chương trình đang tìm địa chỉ của ``CryptAcquireContextA`` rồi sau đó lưu vào Stack.
   
   ![](https://github.com/noobmannn/KCSCTrainingReverse/blob/c3123cb09e9a08c1919f2912ff8bca94788ee3dc/Task5/Img/13.png)
 
